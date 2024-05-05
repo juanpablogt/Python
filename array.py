@@ -1,7 +1,7 @@
 nombres = ['Juan', 'Pablo', 'Gonzalez', 'Trejos']
-cats= ['Tom', 'Snappy', 'Kitty', 'Jessie', 'Chester']
+cats= ['tom', 'Snappy', 'Kitty', 'Jessie', 'Chester']
 
-print(cats[0])
+print(cats[-2].title())
 print(nombres[1])
 print(cats[2])
 print(nombres[3])
