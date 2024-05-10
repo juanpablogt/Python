@@ -6,6 +6,10 @@
 		{
 			"name": "Python",
 			"path": "."
+		},
+		{
+			"name": "math-whit-python",
+			"path": "../math/math-whit-python"
 		}
 	],
 	"settings": {}
