@@ -25,5 +25,9 @@ class RandomWalk():
             next_y = self.x_values[-1] + y_step
 
             self.x_values.append(next_x)
+        main
+            self.y_values.append(next_y)
+
             self.y_values.append(next_y)
             
+        ram1
