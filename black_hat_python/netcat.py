@@ -58,7 +58,7 @@ def main():
             listen = True
         elif o in ("-e", "--execute"):
             execute = a
-        elif o in ("-c", "--commandshell"):
+        elif o in ("-c", "--command"):
             command = True
         elif o in ("-u", "--upload"):
             upload_destination = a
@@ -160,12 +160,15 @@ def receive_file(client_socket):
 # Función para iniciar el shell de comandos
 def command_shell(client_socket):
     while True:
-        client_socket.send(b"Shell> ")
-        cmd_buffer = client_socket.recv(1024)
-        if cmd_buffer == b"exit\n":
+        client_socket.send(b"Shell> ")  # Mostrar el prompt
+        cmd_buffer = client_socket.recv(1024)  # Leer el comando del cliente
+        if cmd_buffer == b"exit\n":  # Si el comando es 'exit', cerramos la conexión
             break
-        response = run_command(cmd_buffer.decode())
-        client_socket.send(response.encode())
+        if cmd_buffer:  # Si hay un comando
+            response = run_command(cmd_buffer.decode())  # Ejecutar el comando
+            client_socket.send(response.encode())  # Enviar la respuesta al cliente
+
+
 
 if __name__ == "__main__":
     main()
