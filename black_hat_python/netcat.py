@@ -81,18 +81,22 @@ def main():
 # Función para enviar datos al objetivo
 def client_sender(buffer):
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
     try:
         client.connect((target, port))
         if len(buffer):
             client.send(buffer.encode())
+
         while True:
             # Recibir la respuesta del servidor
             response = client.recv(4096)
-            if len(response) == 0:
+            if not response:
+                print("[*] No response from server. Closing connection.")
                 break
-            print(response.decode(), end="")
-            buffer = input("")  # Obtener nueva entrada del usuario
+
+            print(response.decode(), end="")  # Mostrar la respuesta
+            buffer = input("Shell> ")  # Obtener nueva entrada del usuario
+            if buffer.strip() == "exit":
+                break
             buffer += "\n"
             client.send(buffer.encode())
     except Exception as e:
@@ -143,9 +147,11 @@ def handle_client(client_socket):
 
 # Función para ejecutar comandos
 def run_command(command):
-    command = command.strip()
-    output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
-    return output.decode()
+    try:
+        output = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+        return output.decode()
+    except subprocess.CalledProcessError as e:
+        return f"Command failed: {e.output.decode()}"
 
 # Función para recibir un archivo
 def receive_file(client_socket):
@@ -160,15 +166,33 @@ def receive_file(client_socket):
 # Función para iniciar el shell de comandos
 def command_shell(client_socket):
     while True:
-        client_socket.send(b"Shell> ")  # Mostrar el prompt
-        cmd_buffer = client_socket.recv(1024)  # Leer el comando del cliente
-        if cmd_buffer == b"exit\n":  # Si el comando es 'exit', cerramos la conexión
+        try:
+            # Enviar un prompt al cliente
+            client_socket.send(b"Shell> ")
+            print("[*] Sent prompt to client")  # Depuración
+
+            # Recibir el comando del cliente
+            cmd_buffer = client_socket.recv(1024)
+            print(f"[*] Received command: {cmd_buffer.decode().strip()}")  # Depuración
+
+            if not cmd_buffer or cmd_buffer.strip() == b"exit":
+                print("[*] Client disconnected.")
+                break
+
+            # Ejecutar el comando recibido
+            response = run_command(cmd_buffer.decode())
+            if response:
+                client_socket.send(response.encode())
+                print("[*] Sent command output to client.")  # Depuración
+            else:
+                client_socket.send(b"Command executed with no output.\n")
+                print("[*] Command executed with no output.")  # Depuración
+        except Exception as e:
+            error_msg = f"Failed to process command. Error: {e}\n"
+            client_socket.send(error_msg.encode())
+            print(f"[*] Error: {e}")
             break
-        if cmd_buffer:  # Si hay un comando
-            response = run_command(cmd_buffer.decode())  # Ejecutar el comando
-            client_socket.send(response.encode())  # Enviar la respuesta al cliente
-
-
 
 if __name__ == "__main__":
     main()
+
